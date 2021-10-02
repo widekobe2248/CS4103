@@ -11,7 +11,8 @@ import androidx.gridlayout.widget.GridLayout
 import kotlin.random.Random
 
 class Board(val gridLayout: GridLayout) {
-    val board = mutableListOf<BoardItem>()
+    val board : MutableList<MutableList<BoardItem>> = ArrayList()
+
 //    val row
 }
 
@@ -25,7 +26,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        var gridLayout = findViewById<GridLayout>(R.id.gridLayout)
+        val gridLayout = findViewById<GridLayout>(R.id.gridLayout)
+        val textView = findViewById<TextView>(R.id.textView)
 //        gridLayout?.setOn
 
         gridLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.black))
@@ -36,18 +38,19 @@ class MainActivity : AppCompatActivity() {
         val board = Board(gridLayout)
 
         for (i in 0 until gridLayout.rowCount) {
+            board.board.add(mutableListOf<BoardItem>())
             for (j in 0 until gridLayout.columnCount) {
-                val tv: TextView = TextView(this)
+                val tv = TextView(this)
 
                 // just for testing, alternate color
-                if (Random.nextInt(0,2)%2==0) {
-                    tv.setBackgroundResource((R.drawable.ic_red_circle))
-                }
-                else {
-                    tv.setBackgroundResource((R.drawable.ic_yellow_circle))
-                }
+//                if (Random.nextInt(0,1)%2==0) {
+//                    tv.setBackgroundResource((R.drawable.ic_red_circle))
+//                }
+//                else {
+//                    tv.setBackgroundResource((R.drawable.ic_yellow_circle))
+//                }
 
-//                tv.setBackgroundResource(R.drawable.ic_black_circle)
+                tv.setBackgroundResource(R.drawable.ic_white_circle)
                 val param = GridLayout.LayoutParams()
 
                 // calculate the desired width and height
@@ -65,61 +68,67 @@ class MainActivity : AppCompatActivity() {
 
                 tv.layoutParams = param
 
-                board.board.add(BoardItem(tv))
+                board.board[i].add(BoardItem(tv))
                 board.gridLayout.addView(tv)
             }
         }
 
-        var i = 0
+        var j = 0
 
+        // red
         val button = findViewById<Button>(R.id.button)
         button?.setOnClickListener {
 
-//            sArr[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.red))
-            board.board[i].state = 1
-            board.board[i].tv.setBackgroundResource(R.drawable.ic_red_circle)
+            var testRow = board.gridLayout.rowCount - 1
 
-            i++
-            if (i >= board.board.size) {
-                i = 0
+            // get the lowest empty tile or 0
+            while(board.board[testRow][j].state != 0) {
+                testRow--
+                if (testRow < 0) {
+                    testRow = 0
+                    break
+                }
             }
 
-            board.board[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.grey))
-            board.board[i].state = 0
+            board.board[testRow][j].tv.setBackgroundResource(R.drawable.ic_red_circle)
+            board.board[testRow][j].state = 2
         }
 
+        // yellow
         val button2 = findViewById<Button>(R.id.button2)
         button2?.setOnClickListener {
+            var testRow = board.gridLayout.rowCount - 1
 
-//            sArr[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.yellow))
-            board.board[i].state = 2
-
-            board.board[i].tv.setBackgroundResource(R.drawable.ic_yellow_circle)
-
-            i++
-            if (i >= board.board.size) {
-                i = 0
+            // get the lowest empty tile or 0
+            while(board.board[testRow][j].state != 0) {
+                testRow--
+                if (testRow < 0) {
+                    testRow = 0
+                    break
+                }
             }
 
-            board.board[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.grey))
-            board.board[i].state = 0
+            board.board[testRow][j].tv.setBackgroundResource(R.drawable.ic_yellow_circle)
+            board.board[testRow][j].state = 2
         }
 
+        // right
         val button3 = findViewById<Button>(R.id.button3)
         button3?.setOnClickListener {
 
-//            sArr[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.yellow))
-//            board.board[i].state = 2
-//
-//            board.board[i].tv.setBackgroundResource(R.drawable.ic_yellow_circle)
-//
-//            i++
-//            if (i >= board.board.size) {
-//                i = 0
-//            }
-//
-//            board.board[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.grey))
-//            board.board[i].state = 0
+            j = if (j < board.gridLayout.columnCount-1) j+1 else 0
+
+            textView.text = j.toString()
+        }
+
+        // left
+        val button4 = findViewById<Button>(R.id.button4)
+        button4?.setOnClickListener {
+
+            j = if (j > 0 ) j-1 else board.gridLayout.columnCount - 1
+
+            textView.text = j.toString()
+
         }
 
 
