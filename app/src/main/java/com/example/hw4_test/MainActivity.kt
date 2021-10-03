@@ -66,6 +66,14 @@ class Board(val gridLayout: GridLayout, val context: Context) {
 
         this.board[testRow][column].fillSpot(piece)
     }
+
+    fun clearBoard() {
+        for (i in 0 until this.gridLayout.rowCount) {
+            for (j in 0 until this.gridLayout.columnCount) {
+                this.board[i][j].overrideSpot(0)
+            }
+        }
+    }
 }
 
 class BoardItem(val tv: TextView) {
@@ -146,6 +154,13 @@ class MainActivity : AppCompatActivity() {
             j = if (j > 0 ) j-1 else board.gridLayout.columnCount - 1
 
             textView.text = j.toString()
+
+        }
+
+        // clear
+        val clearButton = findViewById<Button>(R.id.clear)
+        clearButton?.setOnClickListener {
+             board.clearBoard()
 
         }
 
