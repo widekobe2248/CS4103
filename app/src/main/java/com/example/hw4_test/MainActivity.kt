@@ -77,21 +77,7 @@ class BoardItem(val tv: TextView) {
         // if spot is taken, do nothing
         if (this.state != 0) return false
 
-        when (piece) {
-            1 -> {
-                this.tv.setBackgroundResource(R.drawable.ic_red_circle)
-                this.state = piece
-            }
-            2 -> {
-                this.tv.setBackgroundResource(R.drawable.ic_yellow_circle)
-                this.state = piece
-            }
-            else -> {
-                this.tv.setBackgroundResource(R.drawable.ic_white_circle)
-                this.state = 0
-
-            }
-        }
+        overrideSpot(piece)
         return true
     }
 
