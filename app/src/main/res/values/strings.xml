@@ -3,4 +3,16 @@
     <string name="title_text">Connect 3.5!</string>
     <string name="start_text">Start!</string>
     <string name="quit_text">QUit!</string>
+    <string name="settings_title_text">Choose Your Settings</string>
+    <string name="player_amount_drop_text">Amount of Players</string>
+
+
+    <string-array name="player_amount">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+    </string-array>
+
+
 </resources>

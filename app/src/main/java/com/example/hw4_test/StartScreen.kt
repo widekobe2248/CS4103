@@ -24,8 +24,7 @@ class StartScreen : AppCompatActivity(), View.OnClickListener {
     }
 
     override fun onClick(v: View) {
-        var startBtn = findViewById<Button>(R.id.startBtn)
-        var quitBtn = findViewById<Button>(R.id.quitBtn)
+
         if(v.id == R.id.startBtn)
         {
             startNextActivity(v)
@@ -37,7 +36,7 @@ class StartScreen : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun startNextActivity(view: View) {
-        val intent = Intent(this, MainActivity::class.java)
+        val intent = Intent(this, GameSettings::class.java)
         startActivity(intent)
     }
 

@@ -8,6 +8,7 @@ import android.widget.TableLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.gridlayout.widget.GridLayout
+import org.w3c.dom.Text
 import kotlin.random.Random
 
 class Board(val gridLayout: GridLayout) {
@@ -24,6 +25,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+
 
         var gridLayout = findViewById<GridLayout>(R.id.gridLayout)
 //        gridLayout?.setOn
@@ -73,6 +76,7 @@ class MainActivity : AppCompatActivity() {
         var i = 0
 
         val button = findViewById<Button>(R.id.button)
+
         button?.setOnClickListener {
 
 //            sArr[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.red))
