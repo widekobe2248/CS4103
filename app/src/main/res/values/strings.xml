@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">hw4_test</string>
+    <string name="title_text">Connect 3.5!</string>
+    <string name="start_text">Start!</string>
+    <string name="quit_text">QUit!</string>
 </resources>
