@@ -15,7 +15,7 @@ class StartScreen : AppCompatActivity(), View.OnClickListener {
 
         var startBtn = findViewById<Button>(R.id.startBtn)
         var quitBtn = findViewById<Button>(R.id.quitBtn)
-        var titleText = findViewById<TextView>(R.id.titleText)
+
 
         startBtn.setOnClickListener(this)
         quitBtn.setOnClickListener(this)
