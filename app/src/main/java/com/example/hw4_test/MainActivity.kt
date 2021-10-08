@@ -1,14 +1,18 @@
 package com.example.hw4_test
 
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
+import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
+import android.view.DragEvent
+import android.view.OrientationEventListener
 import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.gridlayout.widget.GridLayout
+import kotlin.math.*
 
 class Board(val gridLayout: GridLayout, val context: Context) {
     val board : MutableList<MutableList<BoardItem>> = ArrayList()
@@ -160,7 +164,37 @@ class MainActivity : AppCompatActivity() {
 
             override fun onStopTrackingTouch(seek: SeekBar?) {
             }
+
+
         })
+
+        fun mapProgress(x: Int, i_min: Int, i_max: Int, o_min: Int, o_max: Int): Int {
+            return (x - i_min) * (o_max - o_min) / (i_max - i_min) + o_min
+        }
+
+        val DEBUG_TAG = "dbg"
+
+        var mOrientationListener = object : OrientationEventListener(
+            this,
+            SensorManager.SENSOR_DELAY_NORMAL
+        ) {
+            override fun onOrientationChanged(orientation: Int) {
+                val scaledOrientation = (orientation + 180) % 360
+                val mappedOrientation = mapProgress(scaledOrientation, 135, 225, 0, seekBar.max)
+//                Log.v(DEBUG_TAG, "Orientation changed to $orientation, scaled to $scaledOrientation, mapped to $mappedOrientation")
+
+                seekBar.progress = mappedOrientation
+
+            }
+        }
+
+        if (mOrientationListener.canDetectOrientation() === true) {
+            Log.v(DEBUG_TAG, "Can detect orientation")
+            mOrientationListener.enable()
+        } else {
+            Log.v(DEBUG_TAG, "Cannot detect orientation")
+            mOrientationListener.disable()
+        }
 
         // red
         val button = findViewById<Button>(R.id.button)
