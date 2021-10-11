@@ -89,7 +89,7 @@
 
     <SeekBar
         android:id="@+id/seekBar"
-        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        style="@style/Widget.AppCompat.SeekBar"
         android:layout_width="385dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"

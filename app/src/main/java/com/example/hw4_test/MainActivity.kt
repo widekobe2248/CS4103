@@ -4,7 +4,6 @@ import android.content.Context
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
-import android.view.DragEvent
 import android.view.OrientationEventListener
 import android.widget.Button
 import android.widget.SeekBar
@@ -12,7 +11,9 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.gridlayout.widget.GridLayout
-import kotlin.math.*
+import java.util.*
+import kotlin.collections.ArrayList
+
 
 class Board(val gridLayout: GridLayout, val context: Context) {
     val board : MutableList<MutableList<BoardItem>> = ArrayList()
@@ -150,11 +151,11 @@ class MainActivity : AppCompatActivity() {
 
         var j = 0
 
-        seekBar.max = board.gridLayout.columnCount - 1
-        seekBar.progress = j
+        seekBar.max = (board.gridLayout.columnCount - 1) * 100
+        seekBar.progress = (j * 100)
         seekBar?.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seek: SeekBar?, value: Int, fromUser: Boolean) {
-                j = value
+                j = (value / 100)
 
                 textView.text = j.toString()
             }
@@ -165,12 +166,14 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seek: SeekBar?) {
             }
 
-
         })
 
-        fun mapProgress(x: Int, i_min: Int, i_max: Int, o_min: Int, o_max: Int): Int {
+        fun mapProgress(x: Int, i_min: Int, i_max: Int, o_min: Float, o_max: Float): Float {
             return (x - i_min) * (o_max - o_min) / (i_max - i_min) + o_min
         }
+
+        var tilt : Float = 0f
+        var distance : Float = 0f
 
         val DEBUG_TAG = "dbg"
 
@@ -180,10 +183,10 @@ class MainActivity : AppCompatActivity() {
         ) {
             override fun onOrientationChanged(orientation: Int) {
                 val scaledOrientation = (orientation + 180) % 360
-                val mappedOrientation = mapProgress(scaledOrientation, 135, 225, 0, seekBar.max)
+                val mappedOrientation: Float = mapProgress(scaledOrientation,135, 225, -2f, 2f)
 //                Log.v(DEBUG_TAG, "Orientation changed to $orientation, scaled to $scaledOrientation, mapped to $mappedOrientation")
 
-                seekBar.progress = mappedOrientation
+                tilt = mappedOrientation
 
             }
         }
@@ -195,6 +198,18 @@ class MainActivity : AppCompatActivity() {
             Log.v(DEBUG_TAG, "Cannot detect orientation")
             mOrientationListener.disable()
         }
+
+        val timer = Timer()
+        timer.scheduleAtFixedRate(
+            object : TimerTask() {
+                override fun run() {
+                    distance += if (tilt > seekBar.max) 0f else tilt
+                    seekBar.progress = distance.toInt()
+
+                }
+            },
+            0, 2
+        )
 
         // red
         val button = findViewById<Button>(R.id.button)
