@@ -79,7 +79,7 @@
         app:layout_constraintTop_toBottomOf="@+id/player_amt" />
 
     <EditText
-        android:id="@+id/editTextNumber"
+        android:id="@+id/widthText"
         android:layout_width="50dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="28dp"
@@ -92,7 +92,7 @@
         app:layout_constraintTop_toBottomOf="@+id/boardSizeTxt" />
 
     <EditText
-        android:id="@+id/editTextNumber2"
+        android:id="@+id/lengthText"
         android:layout_width="50dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="52dp"
@@ -101,7 +101,7 @@
         android:inputType="number"
         android:minHeight="48dp"
         android:text="6"
-        app:layout_constraintStart_toEndOf="@+id/editTextNumber"
+        app:layout_constraintStart_toEndOf="@+id/widthText"
         app:layout_constraintTop_toBottomOf="@+id/boardSizeTxt" />
 
     <TextView
@@ -112,8 +112,8 @@
         android:layout_marginTop="113dp"
         android:layout_marginEnd="23dp"
         android:text="X"
-        app:layout_constraintEnd_toStartOf="@+id/editTextNumber2"
-        app:layout_constraintStart_toEndOf="@+id/editTextNumber"
+        app:layout_constraintEnd_toStartOf="@+id/lengthText"
+        app:layout_constraintStart_toEndOf="@+id/widthText"
         app:layout_constraintTop_toBottomOf="@+id/player_amt" />
 
     <TextView
@@ -124,6 +124,6 @@
         android:layout_marginTop="41dp"
         android:text="@string/connections_win_text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextNumber" />
+        app:layout_constraintTop_toBottomOf="@+id/widthText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
