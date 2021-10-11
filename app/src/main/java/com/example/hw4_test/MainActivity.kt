@@ -1,66 +1,51 @@
 package com.example.hw4_test
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Context
+import android.hardware.SensorManager
 import android.os.Bundle
-import android.view.ViewGroup
+import android.util.Log
+import android.view.DragEvent
+import android.view.OrientationEventListener
 import android.widget.Button
-import android.widget.TableLayout
+import android.widget.SeekBar
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.gridlayout.widget.GridLayout
-import org.w3c.dom.Text
-import kotlin.random.Random
+import kotlin.math.*
 
-class Board(val gridLayout: GridLayout) {
-    val board = mutableListOf<BoardItem>()
-//    val row
-}
+class Board(val gridLayout: GridLayout, val context: Context) {
+    val board : MutableList<MutableList<BoardItem>> = ArrayList()
+    var playerTurn : Int = 1
+    var numPlayers = 2
 
-class BoardItem(val tv: TextView) {
-//    var tv : TextView = TextView()
-    var state = 0
-}
+    constructor(gridLayout: GridLayout, context: Context, numPlayers: Int) : this(gridLayout, context) {
+        this.numPlayers = numPlayers
+    }
 
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+    init {
+
+        // calculate the desired width and height
+        val w : Int = this.gridLayout.layoutParams.width / this.gridLayout.columnCount
+
+        // this uses width because height is not defined in the layout, and it's a square
+        val h : Int = this.gridLayout.layoutParams.width / this.gridLayout.rowCount
 
 
+        // we want the objects to fit on the screen, so take the smaller dimension
+        val dimen : Int = if (w < h) w else h
 
-        var gridLayout = findViewById<GridLayout>(R.id.gridLayout)
-//        gridLayout?.setOn
+        Log.d("info", "w: ${w}, h: ${h}, dimen: ${dimen}")
 
-        gridLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.black))
-        gridLayout.columnCount = 9
-        gridLayout.rowCount = 6
 
-//        val sArr = mutableListOf<BoardItem>()
-        val board = Board(gridLayout)
+        for (i in 0 until this.gridLayout.rowCount) {
+            this.board.add(mutableListOf<BoardItem>())
+            for (j in 0 until this.gridLayout.columnCount) {
+                val tv = TextView(context)
 
-        for (i in 0 until gridLayout.rowCount) {
-            for (j in 0 until gridLayout.columnCount) {
-                val tv: TextView = TextView(this)
+                tv.setBackgroundResource(R.drawable.ic_white_circle)
 
-                // just for testing, alternate color
-                if (Random.nextInt(0,2)%2==0) {
-                    tv.setBackgroundResource((R.drawable.ic_red_circle))
-                }
-                else {
-                    tv.setBackgroundResource((R.drawable.ic_yellow_circle))
-                }
-
-//                tv.setBackgroundResource(R.drawable.ic_black_circle)
                 val param = GridLayout.LayoutParams()
-
-                // calculate the desired width and height
-                val w : Int = gridLayout.layoutParams.width / gridLayout.columnCount
-
-                // this uses width because height is not defined in the layout, and it's a square
-                val h : Int = gridLayout.layoutParams.width / gridLayout.rowCount
-
-                // we want the objects to fit on the screen, so take the smaller dimension
-                val dimen : Int = if (w < h) w else h
 
                 // set width and height
                 param.width = dimen
@@ -68,62 +53,194 @@ class MainActivity : AppCompatActivity() {
 
                 tv.layoutParams = param
 
-                board.board.add(BoardItem(tv))
-                board.gridLayout.addView(tv)
+                this.addItem(i, tv)
+            }
+        }
+    }
+
+    private fun addItem(index: Int, textView: TextView) {
+
+        this.board[index].add(BoardItem(textView))
+        this.gridLayout.addView(textView)
+    }
+
+    fun move(column: Int, piece: Int = this.playerTurn): Int {
+        var testRow = this.gridLayout.rowCount - 1
+
+        // get the lowest empty tile or 0
+        while(this.board[testRow][column].state != 0 && testRow > 0 ) {
+            testRow--
+        }
+
+        if (this.board[testRow][column].fillSpot(piece)) {
+            this.playerTurn = getNextPlayer(piece)
+        }
+
+        return this.playerTurn
+    }
+
+    fun clearBoard() {
+        for (i in 0 until this.gridLayout.rowCount) {
+            for (j in 0 until this.gridLayout.columnCount) {
+                this.board[i][j].overrideSpot(0)
+            }
+        }
+    }
+
+    fun getNextPlayer(currentPlayer: Int = this.playerTurn): Int {
+        return (currentPlayer ) % this.numPlayers + 1
+    }
+
+}
+
+class BoardItem(val tv: TextView) {
+    var state = 0
+
+    // sets the spot's state, if currently empty
+    fun fillSpot(piece: Int):Boolean {
+
+        // if spot is taken, do nothing
+        if (this.state != 0) return false
+
+        overrideSpot(piece)
+        return true
+    }
+
+    // sets the spot's state, regardless of current state
+    fun overrideSpot(piece: Int) {
+        when (piece) {
+            1 -> {
+                this.tv.setBackgroundResource(R.drawable.ic_red_circle)
+                this.state = piece
+            }
+            2 -> {
+                this.tv.setBackgroundResource(R.drawable.ic_yellow_circle)
+                this.state = piece
+            }
+            3 -> {
+                this.tv.setBackgroundResource(R.drawable.ic_green_circle)
+                this.state = piece
+            }
+            else -> {
+                this.tv.setBackgroundResource(R.drawable.ic_white_circle)
+                this.state = 0
+
+            }
+        }
+    }
+}
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val gridLayout = findViewById<GridLayout>(R.id.gridLayout)
+        val textView = findViewById<TextView>(R.id.textView)
+        val seekBar = findViewById<SeekBar>(R.id.seekBar)
+
+        gridLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.black))
+        gridLayout.columnCount = 9
+        gridLayout.rowCount = 6
+
+        val players = mapOf(1 to R.color.red, 2 to R.color.yellow)
+//        val players = mapOf(1 to R.color.red, 2 to R.color.yellow, 3 to R.color.green)
+
+        val board = Board(gridLayout,this, players.size)
+
+        var j = 0
+
+        seekBar.max = board.gridLayout.columnCount - 1
+        seekBar.progress = j
+        seekBar?.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seek: SeekBar?, value: Int, fromUser: Boolean) {
+                j = value
+
+                textView.text = j.toString()
+            }
+
+            override fun onStartTrackingTouch(seek: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(seek: SeekBar?) {
+            }
+
+
+        })
+
+        fun mapProgress(x: Int, i_min: Int, i_max: Int, o_min: Int, o_max: Int): Int {
+            return (x - i_min) * (o_max - o_min) / (i_max - i_min) + o_min
+        }
+
+        val DEBUG_TAG = "dbg"
+
+        var mOrientationListener = object : OrientationEventListener(
+            this,
+            SensorManager.SENSOR_DELAY_NORMAL
+        ) {
+            override fun onOrientationChanged(orientation: Int) {
+                val scaledOrientation = (orientation + 180) % 360
+                val mappedOrientation = mapProgress(scaledOrientation, 135, 225, 0, seekBar.max)
+//                Log.v(DEBUG_TAG, "Orientation changed to $orientation, scaled to $scaledOrientation, mapped to $mappedOrientation")
+
+                seekBar.progress = mappedOrientation
+
             }
         }
 
-        var i = 0
+        if (mOrientationListener.canDetectOrientation() === true) {
+            Log.v(DEBUG_TAG, "Can detect orientation")
+            mOrientationListener.enable()
+        } else {
+            Log.v(DEBUG_TAG, "Cannot detect orientation")
+            mOrientationListener.disable()
+        }
 
+        // red
         val button = findViewById<Button>(R.id.button)
-
         button?.setOnClickListener {
-
-//            sArr[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.red))
-            board.board[i].state = 1
-            board.board[i].tv.setBackgroundResource(R.drawable.ic_red_circle)
-
-            i++
-            if (i >= board.board.size) {
-                i = 0
-            }
-
-            board.board[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.grey))
-            board.board[i].state = 0
+            board.move(j, 1)
         }
 
+        // yellow
         val button2 = findViewById<Button>(R.id.button2)
         button2?.setOnClickListener {
-
-//            sArr[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.yellow))
-            board.board[i].state = 2
-
-            board.board[i].tv.setBackgroundResource(R.drawable.ic_yellow_circle)
-
-            i++
-            if (i >= board.board.size) {
-                i = 0
-            }
-
-            board.board[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.grey))
-            board.board[i].state = 0
+            board.move(j, 2)
         }
 
+        // nextPlayer
+        val turn = findViewById<Button>(R.id.turn)
+        turn.setBackgroundColor(ContextCompat.getColor(this, players[1] ?: R.color.red))
+        turn?.setOnClickListener {
+            val nextPlayer: Int = board.move(j)
+            turn.setBackgroundColor(ContextCompat.getColor(this, players[nextPlayer] ?: R.color.red))
+        }
+
+        // right
         val button3 = findViewById<Button>(R.id.button3)
         button3?.setOnClickListener {
 
-//            sArr[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.yellow))
-//            board.board[i].state = 2
-//
-//            board.board[i].tv.setBackgroundResource(R.drawable.ic_yellow_circle)
-//
-//            i++
-//            if (i >= board.board.size) {
-//                i = 0
-//            }
-//
-//            board.board[i].tv.setBackgroundColor(ContextCompat.getColor(this, R.color.grey))
-//            board.board[i].state = 0
+            j = if (j < board.gridLayout.columnCount-1) j+1 else 0
+
+            seekBar.progress = j
+
+        }
+
+        // left
+        val button4 = findViewById<Button>(R.id.button4)
+        button4?.setOnClickListener {
+
+            j = if (j > 0 ) j-1 else board.gridLayout.columnCount - 1
+
+            seekBar.progress = j
+
+        }
+
+        // clear
+        val clearButton = findViewById<Button>(R.id.clear)
+        clearButton?.setOnClickListener {
+             board.clearBoard()
+
         }
 
 
