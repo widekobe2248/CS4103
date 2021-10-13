@@ -28,15 +28,17 @@ class Board(val gridLayout: GridLayout, val context: Context) {
 
         // calculate the desired width and height
         val w : Int = this.gridLayout.layoutParams.width / this.gridLayout.columnCount
+//        val w : Int = this.gridLayout.measuredWidth / this.gridLayout.columnCount
 
         // this uses width because height is not defined in the layout, and it's a square
         val h : Int = this.gridLayout.layoutParams.width / this.gridLayout.rowCount
+//        val h : Int = this.gridLayout.measuredWidth / this.gridLayout.rowCount
 
 
         // we want the objects to fit on the screen, so take the smaller dimension
         val dimen : Int = if (w < h) w else h
 
-        Log.d("info", "w: ${w}, h: ${h}, dimen: ${dimen}")
+        Log.d("dimen", "w: ${w}, h: ${h}, dimen: ${dimen}")
 
 
         for (i in 0 until this.gridLayout.rowCount) {
@@ -131,6 +133,75 @@ class BoardItem(val tv: TextView) {
     }
 }
 
+class Slider(val board: Board, val seekBar: SeekBar) {
+
+    var tilt : Float = 0f
+    var distance : Float = 0f
+    var columnPosition: Int = 0
+        get() {
+            return seekBar.progress / 100
+        }
+
+    init {
+
+        seekBar.max = (board.gridLayout.columnCount - 1) * 100
+        seekBar.progress = 0
+
+        seekBar?.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seek: SeekBar?, value: Int, fromUser: Boolean) {
+//                j = (value / 100)
+
+//                textView.text = j.toString()
+            }
+
+            override fun onStartTrackingTouch(seek: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(seek: SeekBar?) {
+            }
+
+        })
+
+        var mOrientationListener = object : OrientationEventListener(
+            board.context,
+            SensorManager.SENSOR_DELAY_NORMAL
+        ) {
+            override fun onOrientationChanged(orientation: Int) {
+                val scaledOrientation = (orientation + 180) % 360
+                val mappedOrientation: Float = mapProgress(scaledOrientation,135, 225, -2f, 2f)
+
+                tilt = mappedOrientation
+            }
+        }
+
+        if (mOrientationListener.canDetectOrientation() === true) {
+            Log.v("dbg", "Can detect orientation")
+            mOrientationListener.enable()
+        } else {
+            Log.v("dbg", "Cannot detect orientation")
+            mOrientationListener.disable()
+        }
+
+
+        val timer = Timer()
+        timer.scheduleAtFixedRate(
+            object : TimerTask() {
+                override fun run() {
+                    distance += if (tilt > seekBar.max) 0f else tilt
+                    seekBar.progress = distance.toInt()
+                }
+            },
+            0, 2
+        )
+
+    }
+
+    fun mapProgress(x: Int, i_min: Int, i_max: Int, o_min: Float, o_max: Float): Float {
+        return (x - i_min) * (o_max - o_min) / (i_max - i_min) + o_min
+    }
+
+}
+
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -149,107 +220,52 @@ class MainActivity : AppCompatActivity() {
 
         val board = Board(gridLayout,this, players.size)
 
-        var j = 0
+//        var j = 0
 
-        seekBar.max = (board.gridLayout.columnCount - 1) * 100
-        seekBar.progress = (j * 100)
-        seekBar?.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seek: SeekBar?, value: Int, fromUser: Boolean) {
-                j = (value / 100)
 
-                textView.text = j.toString()
-            }
+        val slider = Slider(board, seekBar)
 
-            override fun onStartTrackingTouch(seek: SeekBar?) {
-            }
 
-            override fun onStopTrackingTouch(seek: SeekBar?) {
-            }
-
-        })
-
-        fun mapProgress(x: Int, i_min: Int, i_max: Int, o_min: Float, o_max: Float): Float {
-            return (x - i_min) * (o_max - o_min) / (i_max - i_min) + o_min
-        }
-
-        var tilt : Float = 0f
-        var distance : Float = 0f
-
-        val DEBUG_TAG = "dbg"
-
-        var mOrientationListener = object : OrientationEventListener(
-            this,
-            SensorManager.SENSOR_DELAY_NORMAL
-        ) {
-            override fun onOrientationChanged(orientation: Int) {
-                val scaledOrientation = (orientation + 180) % 360
-                val mappedOrientation: Float = mapProgress(scaledOrientation,135, 225, -2f, 2f)
-//                Log.v(DEBUG_TAG, "Orientation changed to $orientation, scaled to $scaledOrientation, mapped to $mappedOrientation")
-
-                tilt = mappedOrientation
-
-            }
-        }
-
-        if (mOrientationListener.canDetectOrientation() === true) {
-            Log.v(DEBUG_TAG, "Can detect orientation")
-            mOrientationListener.enable()
-        } else {
-            Log.v(DEBUG_TAG, "Cannot detect orientation")
-            mOrientationListener.disable()
-        }
-
-        val timer = Timer()
-        timer.scheduleAtFixedRate(
-            object : TimerTask() {
-                override fun run() {
-                    distance += if (tilt > seekBar.max) 0f else tilt
-                    seekBar.progress = distance.toInt()
-
-                }
-            },
-            0, 2
-        )
 
         // red
         val button = findViewById<Button>(R.id.button)
         button?.setOnClickListener {
-            board.move(j, 1)
+            board.move(slider.columnPosition, 1)
         }
 
         // yellow
         val button2 = findViewById<Button>(R.id.button2)
         button2?.setOnClickListener {
-            board.move(j, 2)
+            board.move(slider.columnPosition, 2)
         }
 
         // nextPlayer
         val turn = findViewById<Button>(R.id.turn)
         turn.setBackgroundColor(ContextCompat.getColor(this, players[1] ?: R.color.red))
         turn?.setOnClickListener {
-            val nextPlayer: Int = board.move(j)
+            val nextPlayer: Int = board.move(slider.columnPosition)
             turn.setBackgroundColor(ContextCompat.getColor(this, players[nextPlayer] ?: R.color.red))
         }
 
         // right
-        val button3 = findViewById<Button>(R.id.button3)
-        button3?.setOnClickListener {
-
-            j = if (j < board.gridLayout.columnCount-1) j+1 else 0
-
-            seekBar.progress = j
-
-        }
+//        val button3 = findViewById<Button>(R.id.button3)
+//        button3?.setOnClickListener {
+//
+//            j = if (j < board.gridLayout.columnCount-1) j+1 else 0
+//
+//            seekBar.progress = j
+//
+//        }
 
         // left
-        val button4 = findViewById<Button>(R.id.button4)
-        button4?.setOnClickListener {
-
-            j = if (j > 0 ) j-1 else board.gridLayout.columnCount - 1
-
-            seekBar.progress = j
-
-        }
+//        val button4 = findViewById<Button>(R.id.button4)
+//        button4?.setOnClickListener {
+//
+//            j = if (j > 0 ) j-1 else board.gridLayout.columnCount - 1
+//
+//            seekBar.progress = j
+//
+//        }
 
         // clear
         val clearButton = findViewById<Button>(R.id.clear)
