@@ -9,10 +9,12 @@ import android.widget.Button
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.gridlayout.widget.GridLayout
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.roundToInt
 
 
 class Board(val gridLayout: GridLayout, val context: Context) {
@@ -25,22 +27,6 @@ class Board(val gridLayout: GridLayout, val context: Context) {
     }
 
     init {
-
-        // calculate the desired width and height
-        val w : Int = this.gridLayout.layoutParams.width / this.gridLayout.columnCount
-//        val w : Int = this.gridLayout.measuredWidth / this.gridLayout.columnCount
-
-        // this uses width because height is not defined in the layout, and it's a square
-        val h : Int = this.gridLayout.layoutParams.width / this.gridLayout.rowCount
-//        val h : Int = this.gridLayout.measuredWidth / this.gridLayout.rowCount
-
-
-        // we want the objects to fit on the screen, so take the smaller dimension
-        val dimen : Int = if (w < h) w else h
-
-        Log.d("dimen", "w: ${w}, h: ${h}, dimen: ${dimen}")
-
-
         for (i in 0 until this.gridLayout.rowCount) {
             this.board.add(mutableListOf<BoardItem>())
             for (j in 0 until this.gridLayout.columnCount) {
@@ -50,9 +36,8 @@ class Board(val gridLayout: GridLayout, val context: Context) {
 
                 val param = GridLayout.LayoutParams()
 
-                // set width and height
-                param.width = dimen
-                param.height = dimen
+                param.columnSpec = GridLayout.spec(j, 1f)
+                param.rowSpec = GridLayout.spec(i, 1f)
 
                 tv.layoutParams = param
 
@@ -62,7 +47,6 @@ class Board(val gridLayout: GridLayout, val context: Context) {
     }
 
     private fun addItem(index: Int, textView: TextView) {
-
         this.board[index].add(BoardItem(textView))
         this.gridLayout.addView(textView)
     }
@@ -135,23 +119,21 @@ class BoardItem(val tv: TextView) {
 
 class Slider(val board: Board, val seekBar: SeekBar) {
 
-    var tilt : Float = 0f
-    var distance : Float = 0f
+    var acceleration : Float = 0f
+    var velocity : Float = 0f
+    val scalar: Int = 1000
     var columnPosition: Int = 0
         get() {
-            return seekBar.progress / 100
+            return (seekBar.progress / scalar.toFloat()).roundToInt()
         }
 
     init {
 
-        seekBar.max = (board.gridLayout.columnCount - 1) * 100
+        seekBar.max = (board.gridLayout.columnCount - 1) * scalar
         seekBar.progress = 0
 
-        seekBar?.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+        seekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seek: SeekBar?, value: Int, fromUser: Boolean) {
-//                j = (value / 100)
-
-//                textView.text = j.toString()
             }
 
             override fun onStartTrackingTouch(seek: SeekBar?) {
@@ -159,22 +141,21 @@ class Slider(val board: Board, val seekBar: SeekBar) {
 
             override fun onStopTrackingTouch(seek: SeekBar?) {
             }
-
         })
 
-        var mOrientationListener = object : OrientationEventListener(
+        val mOrientationListener = object : OrientationEventListener(
             board.context,
             SensorManager.SENSOR_DELAY_NORMAL
         ) {
             override fun onOrientationChanged(orientation: Int) {
                 val scaledOrientation = (orientation + 180) % 360
-                val mappedOrientation: Float = mapProgress(scaledOrientation,135, 225, -2f, 2f)
+                val mappedOrientation: Float = mapProgress(scaledOrientation,135, 225, -0.02f, 0.02f)
 
-                tilt = mappedOrientation
+                acceleration = mappedOrientation
             }
         }
 
-        if (mOrientationListener.canDetectOrientation() === true) {
+        if (mOrientationListener.canDetectOrientation()) {
             Log.v("dbg", "Can detect orientation")
             mOrientationListener.enable()
         } else {
@@ -187,8 +168,16 @@ class Slider(val board: Board, val seekBar: SeekBar) {
         timer.scheduleAtFixedRate(
             object : TimerTask() {
                 override fun run() {
-                    distance += if (tilt > seekBar.max) 0f else tilt
-                    seekBar.progress = distance.toInt()
+
+                    if (seekBar.progress <= seekBar.max && seekBar.progress >= 0) {
+                        velocity += acceleration
+                    }
+
+                    // add some friction to the slider
+                    velocity *= 0.9995f
+
+                    seekBar.progress += velocity.roundToInt()
+
                 }
             },
             0, 2
@@ -208,36 +197,22 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val gridLayout = findViewById<GridLayout>(R.id.gridLayout)
-        val textView = findViewById<TextView>(R.id.textView)
         val seekBar = findViewById<SeekBar>(R.id.seekBar)
 
         gridLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.black))
         gridLayout.columnCount = 9
         gridLayout.rowCount = 6
 
+        val layoutParams = gridLayout.layoutParams as ConstraintLayout.LayoutParams
+        layoutParams.dimensionRatio = "${gridLayout.columnCount}:${gridLayout.rowCount}"
+        gridLayout.layoutParams = layoutParams
+
         val players = mapOf(1 to R.color.red, 2 to R.color.yellow)
 //        val players = mapOf(1 to R.color.red, 2 to R.color.yellow, 3 to R.color.green)
 
         val board = Board(gridLayout,this, players.size)
 
-//        var j = 0
-
-
         val slider = Slider(board, seekBar)
-
-
-
-        // red
-        val button = findViewById<Button>(R.id.button)
-        button?.setOnClickListener {
-            board.move(slider.columnPosition, 1)
-        }
-
-        // yellow
-        val button2 = findViewById<Button>(R.id.button2)
-        button2?.setOnClickListener {
-            board.move(slider.columnPosition, 2)
-        }
 
         // nextPlayer
         val turn = findViewById<Button>(R.id.turn)
@@ -247,35 +222,11 @@ class MainActivity : AppCompatActivity() {
             turn.setBackgroundColor(ContextCompat.getColor(this, players[nextPlayer] ?: R.color.red))
         }
 
-        // right
-//        val button3 = findViewById<Button>(R.id.button3)
-//        button3?.setOnClickListener {
-//
-//            j = if (j < board.gridLayout.columnCount-1) j+1 else 0
-//
-//            seekBar.progress = j
-//
-//        }
-
-        // left
-//        val button4 = findViewById<Button>(R.id.button4)
-//        button4?.setOnClickListener {
-//
-//            j = if (j > 0 ) j-1 else board.gridLayout.columnCount - 1
-//
-//            seekBar.progress = j
-//
-//        }
-
         // clear
         val clearButton = findViewById<Button>(R.id.clear)
         clearButton?.setOnClickListener {
              board.clearBoard()
 
         }
-
-
     }
-
-
 }
