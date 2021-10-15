@@ -3,13 +3,14 @@ package com.example.hw4_test
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.*
 
 class GameSettings : AppCompatActivity(), View.OnClickListener, AdapterView.OnItemSelectedListener {
 
-    var player_amount = 1
-    var connections_win_amt = 4
+    var player_amount = 2
+    var connections_win_amt = 3
     var board_width = 9
     var board_height = 5
 
@@ -49,12 +50,12 @@ class GameSettings : AppCompatActivity(), View.OnClickListener, AdapterView.OnIt
         //This is because it returns type Any! which you cannot cast to
         //Int but you can Cast to String then to Int
         if (v != null) {
-            if(v.id == R.id.player_amt)
+            if(parent.id == R.id.player_amt)
             {
                 var selected = parent.getItemAtPosition(pos) as String
                 player_amount = selected.toInt()
             }
-            if(v.id == R.id.connection_win_amt)
+            if(parent.id == R.id.connection_win_amt)
             {
                 var selected = parent.getItemAtPosition(pos) as String
                 connections_win_amt = selected.toInt()

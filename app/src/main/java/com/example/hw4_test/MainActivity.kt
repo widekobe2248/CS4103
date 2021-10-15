@@ -121,6 +121,10 @@ class BoardItem(val tv: TextView) {
                 this.tv.setBackgroundResource(R.drawable.ic_green_circle)
                 this.state = piece
             }
+            4 -> {
+                this.tv.setBackgroundResource(R.drawable.ic_purple_circle)
+                this.state = piece
+            }
             else -> {
                 this.tv.setBackgroundResource(R.drawable.ic_white_circle)
                 this.state = 0
@@ -135,15 +139,28 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        val bundle: Bundle? = intent.extras
+        var playerAmt = bundle?.get("player_amt") as Int
+        val connections_to_win = bundle?.get("connection_win")
+        val board_width = bundle?.get("board_width") as Int
+        val board_height = bundle?.get("board_height") as Int
+
+
         val gridLayout = findViewById<GridLayout>(R.id.gridLayout)
         val textView = findViewById<TextView>(R.id.textView)
         val seekBar = findViewById<SeekBar>(R.id.seekBar)
 
         gridLayout.setBackgroundColor(ContextCompat.getColor(this, R.color.black))
-        gridLayout.columnCount = 9
-        gridLayout.rowCount = 6
+        gridLayout.columnCount = board_width as Int
+        gridLayout.rowCount = board_height as Int
 
-        val players = mapOf(1 to R.color.red, 2 to R.color.yellow)
+        var players = mapOf(1 to R.color.red, 2 to R.color.yellow)
+        when (playerAmt) {
+            2 -> players = mapOf(1 to R.color.red, 2 to R.color.yellow)
+            3 -> players = mapOf(1 to R.color.red, 2 to R.color.yellow, 3 to R.color.green)
+            4 -> players = mapOf(1 to R.color.red, 2 to R.color.yellow, 3 to R.color.green, 4 to R.color.purple_200)
+        }
+//        val players = mapOf(1 to R.color.red, 2 to R.color.yellow)
 //        val players = mapOf(1 to R.color.red, 2 to R.color.yellow, 3 to R.color.green)
 
         val board = Board(gridLayout,this, players.size)
@@ -208,7 +225,7 @@ class MainActivity : AppCompatActivity() {
             board.move(j, 2)
         }
 
-        // nextPlayer
+        // nextPlayer (End's Turn)
         val turn = findViewById<Button>(R.id.turn)
         turn.setBackgroundColor(ContextCompat.getColor(this, players[1] ?: R.color.red))
         turn?.setOnClickListener {
