@@ -125,7 +125,6 @@ class Board(val gridLayout: GridLayout, val context: Context) {
         }
         return false
     }
-
 }
 
 class BoardItem(val tv: TextView) {
@@ -268,7 +267,11 @@ class MainActivity : AppCompatActivity() {
         val turn = findViewById<Button>(R.id.turn)
         turn.setBackgroundColor(ContextCompat.getColor(this, players[1] ?: R.color.black))
         turn?.setOnClickListener {
+            val thisPlayer: Int = board.playerTurn
             val nextPlayer: Int = board.move(slider.columnPosition)
+            if (nextPlayer == 0) {
+                // return thisPlayer from activity
+            }
             turn.setBackgroundColor(ContextCompat.getColor(this, players[nextPlayer] ?: R.color.black))
         }
 
