@@ -21,9 +21,11 @@ class Board(val gridLayout: GridLayout, val context: Context) {
     val board : MutableList<MutableList<BoardItem>> = ArrayList()
     var playerTurn : Int = 1
     var numPlayers = 2
+    var connectionAmount = 4
 
-    constructor(gridLayout: GridLayout, context: Context, numPlayers: Int) : this(gridLayout, context) {
+    constructor(gridLayout: GridLayout, context: Context, numPlayers: Int, connectionAmount: Int) : this(gridLayout, context) {
         this.numPlayers = numPlayers
+        this.connectionAmount = connectionAmount
     }
 
     init {
@@ -60,7 +62,12 @@ class Board(val gridLayout: GridLayout, val context: Context) {
         }
 
         if (this.board[testRow][column].fillSpot(piece)) {
-            this.playerTurn = getNextPlayer(piece)
+            if (this.checkWin(testRow, column, piece)) {
+                this.playerTurn = 0
+            }
+            else {
+                this.playerTurn = getNextPlayer(piece)
+            }
         }
 
         return this.playerTurn
@@ -75,7 +82,48 @@ class Board(val gridLayout: GridLayout, val context: Context) {
     }
 
     fun getNextPlayer(currentPlayer: Int = this.playerTurn): Int {
-        return (currentPlayer ) % this.numPlayers + 1
+        return (currentPlayer) % this.numPlayers + 1
+    }
+
+    fun checkWin(moveRow: Int, moveColumn: Int, player: Int): Boolean {
+
+        var connections = mutableListOf(0,0,0,0)
+        var incrementer = 1
+        var pairing = 0
+
+        for (x in -1..1) {
+            for (y in -1..1) {
+                for (i in 1 until this.connectionAmount) {
+                    val testRow = moveRow+x*i
+                    val testColumn = moveColumn+y*i
+
+                    // avoid IndexOutOfBounds
+                    if (testRow > gridLayout.rowCount-1) break
+                    if (testRow < 0) break
+                    if (testColumn > gridLayout.columnCount-1) break
+                    if (testColumn < 0) break
+
+                    // don't check the piece that was just placed
+                    if (x == 0 && y == 0) {
+                        // this switches the direction of the accumulating list
+                        incrementer=-1
+                        break
+                    }
+
+                    var boardState = board[testRow][testColumn].state
+
+                    if (boardState == player) {
+                        connections[pairing] += 1
+                    }
+                    else break
+                }
+                pairing += incrementer
+            }
+        }
+        if (connections.maxOrNull() == connectionAmount-1) {
+            return true
+        }
+        return false
     }
 
 }
@@ -210,16 +258,18 @@ class MainActivity : AppCompatActivity() {
         val players = mapOf(1 to R.color.red, 2 to R.color.yellow)
 //        val players = mapOf(1 to R.color.red, 2 to R.color.yellow, 3 to R.color.green)
 
-        val board = Board(gridLayout,this, players.size)
+        val connectionAmount = 4
+
+        val board = Board(gridLayout,this, players.size, connectionAmount)
 
         val slider = Slider(board, seekBar)
 
         // nextPlayer
         val turn = findViewById<Button>(R.id.turn)
-        turn.setBackgroundColor(ContextCompat.getColor(this, players[1] ?: R.color.red))
+        turn.setBackgroundColor(ContextCompat.getColor(this, players[1] ?: R.color.black))
         turn?.setOnClickListener {
             val nextPlayer: Int = board.move(slider.columnPosition)
-            turn.setBackgroundColor(ContextCompat.getColor(this, players[nextPlayer] ?: R.color.red))
+            turn.setBackgroundColor(ContextCompat.getColor(this, players[nextPlayer] ?: R.color.black))
         }
 
         // clear
