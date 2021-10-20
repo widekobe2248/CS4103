@@ -1,6 +1,7 @@
 package com.example.hw4_test
 
 import android.content.Context
+import android.content.Intent
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
@@ -283,6 +284,7 @@ class MainActivity : AppCompatActivity() {
         // nextPlayer (End's Turn)
         val turn = findViewById<Button>(R.id.turn)
         turn.setBackgroundColor(ContextCompat.getColor(this, players[1] ?: R.color.black))
+        seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_red_circle)
         turn?.setOnClickListener {
             val thisPlayer: Int = board.playerTurn
             val nextPlayer: Int = board.move(slider.columnPosition)
@@ -290,13 +292,27 @@ class MainActivity : AppCompatActivity() {
                 // return thisPlayer from activity
             }
             turn.setBackgroundColor(ContextCompat.getColor(this, players[nextPlayer] ?: R.color.black))
+            when (nextPlayer) {
+                1 -> seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_red_circle)
+                2 -> seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_yellow_circle)
+                3 -> seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_green_circle)
+                4 -> seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_purple_circle)
+                else -> seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.ic_black_circle)
+            }
         }
 
         // clear
         val clearButton = findViewById<Button>(R.id.clear)
         clearButton?.setOnClickListener {
-             board.clearBoard()
+            board.clearBoard()
 
+        }
+
+        // back
+        val backButton = findViewById<Button>(R.id.back)
+        backButton?.setOnClickListener {
+            val intent = Intent(this, GameSettings::class.java)
+            startActivity(intent)
         }
     }
 }
