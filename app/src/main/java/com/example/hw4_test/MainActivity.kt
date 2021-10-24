@@ -184,6 +184,7 @@ class Slider(val board: Board, val seekBar: SeekBar) {
         seekBar.max = (board.gridLayout.columnCount - 1) * scalar
         seekBar.progress = 0
 
+        // https://developer.android.com/reference/kotlin/android/widget/SeekBar.OnSeekBarChangeListener
         seekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seek: SeekBar?, value: Int, fromUser: Boolean) {
             }
@@ -195,6 +196,7 @@ class Slider(val board: Board, val seekBar: SeekBar) {
             }
         })
 
+        // https://developer.android.com/reference/android/view/OrientationEventListener
         val mOrientationListener = object : OrientationEventListener(
             board.context,
             SensorManager.SENSOR_DELAY_NORMAL
@@ -215,7 +217,7 @@ class Slider(val board: Board, val seekBar: SeekBar) {
             mOrientationListener.disable()
         }
 
-
+        // https://developer.android.com/reference/kotlin/java/util/Timer
         val timer = Timer()
         timer.scheduleAtFixedRate(
             object : TimerTask() {
@@ -272,8 +274,6 @@ class MainActivity : AppCompatActivity() {
             3 -> players = mapOf(1 to R.color.red, 2 to R.color.yellow, 3 to R.color.green)
             4 -> players = mapOf(1 to R.color.red, 2 to R.color.yellow, 3 to R.color.green, 4 to R.color.purple_200)
         }
-//        val players = mapOf(1 to R.color.red, 2 to R.color.yellow)
-//        val players = mapOf(1 to R.color.red, 2 to R.color.yellow, 3 to R.color.green)
 
         val connectionAmount = connections_to_win
 
