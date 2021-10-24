@@ -54,6 +54,7 @@ class Board(val gridLayout: GridLayout, val context: Context) {
         this.gridLayout.addView(textView)
     }
 
+
     fun move(column: Int, piece: Int = this.playerTurn): Int {
         var testRow = this.gridLayout.rowCount - 1
 
@@ -64,6 +65,7 @@ class Board(val gridLayout: GridLayout, val context: Context) {
 
         if (this.board[testRow][column].fillSpot(piece)) {
             if (this.checkWin(testRow, column, piece)) {
+
                 this.playerTurn = 0
             }
             else {
@@ -289,7 +291,9 @@ class MainActivity : AppCompatActivity() {
             val thisPlayer: Int = board.playerTurn
             val nextPlayer: Int = board.move(slider.columnPosition)
             if (nextPlayer == 0) {
-                // return thisPlayer from activity
+                val intent = Intent(this, EndScreen::class.java)
+                intent.putExtra("player_winner", thisPlayer)
+                startActivity(intent)
             }
             turn.setBackgroundColor(ContextCompat.getColor(this, players[nextPlayer] ?: R.color.black))
             when (nextPlayer) {

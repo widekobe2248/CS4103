@@ -10,13 +10,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Hw4_test">
         <activity
-            android:name=".GameSettings"
+            android:name=".EndScreen"
             android:exported="true"
             android:screenOrientation="portrait"/>
         <activity
+            android:name=".GameSettings"
+            android:exported="true"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".StartScreen"
             android:exported="true"
